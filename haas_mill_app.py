@@ -4,8 +4,7 @@ A RAG-powered Q&A system for the Haas Mill Next Generation Control Manual
 """
 import streamlit as st
 from openai import OpenAI
-from pinecone import Pinecone as PineconeClient
-import os
+from pinecone import Pinecone
 
 # Page configuration
 st.set_page_config(
@@ -23,7 +22,7 @@ INDEX_NAME = 'haas-mill-manual'
 @st.cache_resource
 def init_clients():
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    pc = PineconeClient(api_key=PINECONE_API_KEY)
+    pc = Pinecone(api_key=PINECONE_API_KEY)
     index = pc.Index(INDEX_NAME)
     return openai_client, index
 
@@ -50,7 +49,7 @@ def search_manual(query, index, client, top_k=5):
     return results
 
 def generate_response(query, context_chunks, client):
-    """Generate response using Claude through Anthropic API"""
+    """Generate response using GPT-4"""
     # Prepare context from search results
     context = "\n\n---\n\n".join([
         f"[Page {match['metadata']['page']}]\n{match['metadata']['text']}"

@@ -4,7 +4,7 @@ A RAG-powered Q&A system for the Haas Mill Next Generation Control Manual
 """
 import streamlit as st
 from openai import OpenAI
-from pinecone import Pinecone
+import pinecone
 
 # Page configuration
 st.set_page_config(
@@ -13,17 +13,72 @@ st.set_page_config(
     layout="wide"
 )
 
+# ============================================================================
+# PASSWORD PROTECTION
+# ============================================================================
+def check_password():
+    """Returns `True` if the user has entered the correct password."""
+    
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == "Keith2025":
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    # First run or password not correct
+    if "password_correct" not in st.session_state:
+        # Show input for password
+        st.title("🔧 Keith Manufacturing - Machine Assistant")
+        st.markdown("### Secure Access")
+        st.text_input(
+            "Enter Password:", 
+            type="password", 
+            on_change=password_entered, 
+            key="password"
+        )
+        st.info("👋 Enter the password to access the machine manuals.")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password incorrect
+        st.title("🔧 Keith Manufacturing - Machine Assistant")
+        st.markdown("### Secure Access")
+        st.text_input(
+            "Enter Password:", 
+            type="password", 
+            on_change=password_entered, 
+            key="password"
+        )
+        st.error("❌ Incorrect password. Please try again.")
+        return False
+    else:
+        # Password correct
+        return True
+
+# Check password before showing app
+if not check_password():
+    st.stop()
+
+# ============================================================================
+# MAIN APPLICATION (Only shown after correct password)
+# ============================================================================
+
 # Configuration
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", "")
 PINECONE_API_KEY = st.secrets.get("PINECONE_API_KEY", "")
+PINECONE_ENV = "us-east-1"
 INDEX_NAME = 'haas-mill-manual'
 
 # Initialize clients
 @st.cache_resource
 def init_clients():
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    pc = Pinecone(api_key=PINECONE_API_KEY)
-    index = pc.Index(INDEX_NAME)
+    
+    # Initialize Pinecone (v3 syntax)
+    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+    index = pinecone.Index(INDEX_NAME)
+    
     return openai_client, index
 
 def get_query_embedding(query, client):
@@ -87,6 +142,7 @@ Answer:"""
 # UI
 st.title("🔧 Haas Mill Operator's Manual Assistant")
 st.markdown("### Next Generation Control - 15\" LCD (96-8210)")
+st.caption("🔒 Secure access for Keith Manufacturing employees")
 
 st.markdown("""
 Ask questions about operating your Haas Mill! This assistant searches the 550-page operator's manual 
@@ -208,4 +264,58 @@ with st.sidebar:
         st.rerun()
     
     st.divider()
+    
+    # Logout button
+    if st.button("🔓 Logout"):
+        st.session_state["password_correct"] = False
+        st.rerun()
+    
+    st.divider()
+    st.caption("🔒 Secure System for Keith Manufacturing")
     st.caption("Built with Streamlit • OpenAI • Pinecone")
+```
+
+---
+
+## **What Changed:**
+
+1. ✅ **Password screen appears first** - Users see "Enter Password" before anything else
+2. ✅ **Password is "Keith2025"** - Exactly as you requested
+3. ✅ **Session-based** - Password stays valid until browser closes
+4. ✅ **Logout button added** - In sidebar if someone wants to log out
+5. ✅ **Secure branding** - Shows "Keith Manufacturing" and lock icons
+6. ✅ **Clean error handling** - Shows helpful message if wrong password
+
+---
+
+## **How to Update:**
+
+1. **Go to your GitHub repo** (`haas-mill-assistant`)
+2. **Click on `haas_mill_app.py`**
+3. **Click the pencil icon** (Edit)
+4. **Replace ALL the code** with the code above
+5. **Commit changes**
+6. **Wait 2 minutes** for Streamlit to redeploy
+
+---
+
+## **What Users Will See:**
+
+**Before password:**
+```
+🔧 Keith Manufacturing - Machine Assistant
+Secure Access
+
+Enter Password: [________]
+
+👋 Enter the password to access the machine manuals.
+```
+
+**After correct password:**
+```
+[Full Haas Mill Assistant interface loads]
+```
+
+**If wrong password:**
+```
+❌ Incorrect password. Please try again.

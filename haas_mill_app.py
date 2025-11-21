@@ -6,16 +6,12 @@ import streamlit as st
 from openai import OpenAI
 import pinecone
 
-# Page configuration
 st.set_page_config(
     page_title="Haas Mill Assistant",
     page_icon="🔧",
     layout="wide"
 )
 
-# ============================================================================
-# PASSWORD PROTECTION
-# ============================================================================
 def check_password():
     """Returns `True` if the user has entered the correct password."""
     
@@ -23,13 +19,11 @@ def check_password():
         """Checks whether a password entered by the user is correct."""
         if st.session_state["password"] == "Keith2025":
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store password
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
-    # First run or password not correct
     if "password_correct" not in st.session_state:
-        # Show input for password
         st.title("🔧 Keith Manufacturing - Machine Assistant")
         st.markdown("### Secure Access")
         st.text_input(
@@ -41,7 +35,6 @@ def check_password():
         st.info("👋 Enter the password to access the machine manuals.")
         return False
     elif not st.session_state["password_correct"]:
-        # Password incorrect
         st.title("🔧 Keith Manufacturing - Machine Assistant")
         st.markdown("### Secure Access")
         st.text_input(
@@ -53,32 +46,21 @@ def check_password():
         st.error("❌ Incorrect password. Please try again.")
         return False
     else:
-        # Password correct
         return True
 
-# Check password before showing app
 if not check_password():
     st.stop()
 
-# ============================================================================
-# MAIN APPLICATION (Only shown after correct password)
-# ============================================================================
-
-# Configuration
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", "")
 PINECONE_API_KEY = st.secrets.get("PINECONE_API_KEY", "")
 PINECONE_ENV = "us-east-1"
 INDEX_NAME = 'haas-mill-manual'
 
-# Initialize clients
 @st.cache_resource
 def init_clients():
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    
-    # Initialize Pinecone (v3 syntax)
     pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
     index = pinecone.Index(INDEX_NAME)
-    
     return openai_client, index
 
 def get_query_embedding(query, client):
@@ -91,27 +73,21 @@ def get_query_embedding(query, client):
 
 def search_manual(query, index, client, top_k=5):
     """Search the manual for relevant sections"""
-    # Get query embedding
     query_embedding = get_query_embedding(query, client)
-    
-    # Search Pinecone
     results = index.query(
         vector=query_embedding,
         top_k=top_k,
         include_metadata=True
     )
-    
     return results
 
 def generate_response(query, context_chunks, client):
     """Generate response using GPT-4"""
-    # Prepare context from search results
     context = "\n\n---\n\n".join([
         f"[Page {match['metadata']['page']}]\n{match['metadata']['text']}"
         for match in context_chunks
     ])
     
-    # Create prompt
     prompt = f"""You are a helpful assistant for Haas Mill operators. Answer the user's question based on the following sections from the Haas Mill Operator's Manual.
 
 If the answer is in the manual sections provided, give a clear, detailed answer and cite the relevant page numbers.
@@ -126,7 +102,6 @@ User Question: {query}
 
 Answer:"""
 
-    # Generate response using GPT-4
     response = client.chat.completions.create(
         model="gpt-4-turbo-preview",
         messages=[
@@ -139,7 +114,6 @@ Answer:"""
     
     return response.choices[0].message.content
 
-# UI
 st.title("🔧 Haas Mill Operator's Manual Assistant")
 st.markdown("### Next Generation Control - 15\" LCD (96-8210)")
 st.caption("🔒 Secure access for Keith Manufacturing employees")
@@ -158,11 +132,9 @@ to provide accurate answers with page references.
 
 st.divider()
 
-# Initialize session state for chat history
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -173,33 +145,23 @@ for message in st.session_state.messages:
                     st.text(source['text'][:300] + "...")
                     st.divider()
 
-# Chat input
 if prompt := st.chat_input("Ask about the Haas Mill operation..."):
-    # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
     
-    # Display user message
     with st.chat_message("user"):
         st.markdown(prompt)
     
-    # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Searching manual..."):
             try:
-                # Initialize clients
                 openai_client, index = init_clients()
-                
-                # Search for relevant sections
                 search_results = search_manual(prompt, index, openai_client)
                 
                 if not search_results.matches:
                     response = "I couldn't find relevant information in the manual for that question. Please try rephrasing or ask about a different topic."
                     sources = []
                 else:
-                    # Generate response
                     response = generate_response(prompt, search_results.matches, openai_client)
-                    
-                    # Prepare sources
                     sources = [
                         {
                             "page": match.metadata['page'],
@@ -209,10 +171,8 @@ if prompt := st.chat_input("Ask about the Haas Mill operation..."):
                         for match in search_results.matches
                     ]
                 
-                # Display response
                 st.markdown(response)
                 
-                # Display sources
                 if sources:
                     with st.expander("📚 View Sources"):
                         for source in sources:
@@ -220,7 +180,6 @@ if prompt := st.chat_input("Ask about the Haas Mill operation..."):
                             st.text(source['text'][:300] + "...")
                             st.divider()
                 
-                # Add assistant response to chat history
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": response,
@@ -231,7 +190,6 @@ if prompt := st.chat_input("Ask about the Haas Mill operation..."):
                 st.error(f"An error occurred: {str(e)}")
                 st.info("Please make sure your API keys are correctly configured in Streamlit secrets.")
 
-# Sidebar
 with st.sidebar:
     st.header("About")
     st.markdown("""
@@ -265,7 +223,6 @@ with st.sidebar:
     
     st.divider()
     
-    # Logout button
     if st.button("🔓 Logout"):
         st.session_state["password_correct"] = False
         st.rerun()
@@ -273,49 +230,3 @@ with st.sidebar:
     st.divider()
     st.caption("🔒 Secure System for Keith Manufacturing")
     st.caption("Built with Streamlit • OpenAI • Pinecone")
-```
-
----
-
-## **What Changed:**
-
-1. ✅ **Password screen appears first** - Users see "Enter Password" before anything else
-2. ✅ **Password is "Keith2025"** - Exactly as you requested
-3. ✅ **Session-based** - Password stays valid until browser closes
-4. ✅ **Logout button added** - In sidebar if someone wants to log out
-5. ✅ **Secure branding** - Shows "Keith Manufacturing" and lock icons
-6. ✅ **Clean error handling** - Shows helpful message if wrong password
-
----
-
-## **How to Update:**
-
-1. **Go to your GitHub repo** (`haas-mill-assistant`)
-2. **Click on `haas_mill_app.py`**
-3. **Click the pencil icon** (Edit)
-4. **Replace ALL the code** with the code above
-5. **Commit changes**
-6. **Wait 2 minutes** for Streamlit to redeploy
-
----
-
-## **What Users Will See:**
-
-**Before password:**
-```
-🔧 Keith Manufacturing - Machine Assistant
-Secure Access
-
-Enter Password: [________]
-
-👋 Enter the password to access the machine manuals.
-```
-
-**After correct password:**
-```
-[Full Haas Mill Assistant interface loads]
-```
-
-**If wrong password:**
-```
-❌ Incorrect password. Please try again.

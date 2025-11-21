@@ -4,7 +4,7 @@ A RAG-powered Q&A system for the Haas Mill Next Generation Control Manual
 """
 import streamlit as st
 from openai import OpenAI
-import pinecone
+from pinecone import Pinecone
 
 st.set_page_config(
     page_title="Haas Mill Assistant",
@@ -53,14 +53,13 @@ if not check_password():
 
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", "")
 PINECONE_API_KEY = st.secrets.get("PINECONE_API_KEY", "")
-PINECONE_ENV = "us-east-1"
 INDEX_NAME = 'haas-mill-manual'
 
 @st.cache_resource
 def init_clients():
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-    index = pinecone.Index(INDEX_NAME)
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index = pc.Index(INDEX_NAME)
     return openai_client, index
 
 def get_query_embedding(query, client):

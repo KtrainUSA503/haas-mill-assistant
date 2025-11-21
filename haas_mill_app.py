@@ -4,7 +4,7 @@ A RAG-powered Q&A system for the Haas Mill Next Generation Control Manual
 """
 import streamlit as st
 from openai import OpenAI
-from pinecone import Pinecone
+from pinecone import Pinecone as PineconeClient
 import os
 
 # Page configuration
@@ -23,7 +23,7 @@ INDEX_NAME = 'haas-mill-manual'
 @st.cache_resource
 def init_clients():
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    pc = Pinecone(api_key=PINECONE_API_KEY)
+    pc = PineconeClient(api_key=PINECONE_API_KEY)
     index = pc.Index(INDEX_NAME)
     return openai_client, index
 

@@ -23,9 +23,9 @@ st.set_page_config(
 # ============================================================================
 # In production, move this to a secure database or secrets management
 USERS = {
-    "john.smith": {"password": "Keith2025", "name": "John Smith", "role": "Operator"},
-    "sarah.jones": {"password": "Keith2025", "name": "Sarah Jones", "role": "Operator"},
-    "mike.wilson": {"password": "Keith2025", "name": "Mike Wilson", "role": "Supervisor"},
+    "aaron.colby": {"password": "Keith2025", "name": "Aaron Colby", "role": "Operator"},
+    "kenny.yukich": {"password": "Keith2025", "name": "Kenny Yukich", "role": "Operator"},
+    "brian.feigner": {"password": "Keith2025", "name": "Brian Feigner", "role": "IT Administrator"},
     "admin": {"password": "Keith2025Admin", "name": "Administrator", "role": "Admin"}
 }
 

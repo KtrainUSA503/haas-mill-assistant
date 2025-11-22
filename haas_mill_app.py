@@ -462,8 +462,8 @@ with st.sidebar:
     st.metric("Your Questions Today", f"{queries_today}/100")
     
     # Estimated costs (approximate)
-    estimated_cost = queries_today * 0.03
-    st.metric("Estimated Cost Today", f"${estimated_cost:.2f}")
+    estimated_cost = queries_today * 0.003
+    st.metric("Estimated Cost Today", f"${estimated_cost:.3f}")
     
     st.caption(f"Last activity: {datetime.fromtimestamp(st.session_state.last_activity).strftime('%H:%M:%S')}")
     

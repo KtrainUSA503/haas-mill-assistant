@@ -305,7 +305,7 @@ User Question: {query}
 Answer:"""
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system", "content": "You are an expert Haas Mill operator assistant. Provide clear, accurate, and safety-conscious answers based on the official operator's manual. Always prioritize safety and encourage verification of critical procedures."},
             {"role": "user", "content": prompt}
@@ -462,8 +462,8 @@ with st.sidebar:
     st.metric("Your Questions Today", f"{queries_today}/100")
     
     # Estimated costs (approximate)
-    estimated_cost = queries_today * 0.003
-    st.metric("Estimated Cost Today", f"${estimated_cost:.3f}")
+    estimated_cost = queries_today * 0.024
+    st.metric("Estimated Cost Today", f"${estimated_cost:.2f}")
     
     st.caption(f"Last activity: {datetime.fromtimestamp(st.session_state.last_activity).strftime('%H:%M:%S')}")
     

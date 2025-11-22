@@ -305,7 +305,7 @@ User Question: {query}
 Answer:"""
 
     response = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are an expert Haas Mill operator assistant. Provide clear, accurate, and safety-conscious answers based on the official operator's manual. Always prioritize safety and encourage verification of critical procedures."},
             {"role": "user", "content": prompt}
